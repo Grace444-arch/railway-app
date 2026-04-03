@@ -6,9 +6,10 @@ import os
 app = Flask(__name__)
 
 # 🔹 DATABASE CONNECTION (RAILWAY)
-DATABASE_URL = os.environ.get("DATABASE_URL")
-if not DATABASE_URL:
-    raise ValueError("❌ DATABASE_URL is not set. Please set it in Railway Variables tab.")
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL",
+    "postgresql://postgres:UjPtQIEDfseJCmYjXnRCMKgMdPMjTXDx@interchange.proxy.rlwy.net:29552/railway"
+)
 
 def get_db():
     return psycopg2.connect(DATABASE_URL)
@@ -28,9 +29,6 @@ def init_db():
     cur.close()
     conn.close()
     print("✅ Database initialized successfully.")
-
-# 🔹 RUN INIT_DB IMMEDIATELY (works with gunicorn on Railway)
-init_db()
 
 # 🔹 HOME PAGE (VIEW ALL USERS)
 @app.route("/")
@@ -59,6 +57,7 @@ def register():
         conn.commit()
         cur.close()
         conn.close()
+
         return redirect(url_for("index"))
 
     return render_template("register.html")
@@ -99,6 +98,9 @@ def edit(id):
     conn.close()
     return render_template("edit.html", user=user)
 
+
+# 🔹 RUN INIT (works for both local and Railway/gunicorn)
+init_db()
+
 if __name__ == "__main__":
-    # 🔹 Only run local Flask dev server here
     app.run(debug=True)
