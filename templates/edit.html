@@ -1,23 +1,214 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Edit User</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edit User</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0f14;
+      --surface: #161920;
+      --border: #252830;
+      --accent: #7c5cfc;
+      --accent-glow: rgba(124, 92, 252, 0.25);
+      --warning: #fcb95c;
+      --text: #e8eaf0;
+      --muted: #6b7280;
+    }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .wrapper {
+      width: 100%;
+      max-width: 460px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.88rem;
+      margin-bottom: 24px;
+      transition: color 0.15s;
+    }
+
+    .back-link:hover { color: var(--text); }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px;
+    }
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(252, 185, 92, 0.1);
+      border: 1px solid rgba(252, 185, 92, 0.3);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+
+    h2 span { color: var(--accent); }
+
+    .user-id {
+      display: inline-block;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      background: rgba(124, 92, 252, 0.1);
+      color: var(--accent);
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-left: 8px;
+      vertical-align: middle;
+      border: 1px solid rgba(124, 92, 252, 0.2);
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 32px;
+    }
+
+    .form-group { margin-bottom: 20px; }
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      font-family: 'DM Mono', monospace;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+
+    input[type="text"],
+    input[type="email"] {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 13px 16px;
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.18s, box-shadow 0.18s;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 28px 0;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 13px;
+      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      border: none;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 24px var(--accent-glow);
+    }
+
+    .btn-primary:hover {
+      background: #9070ff;
+      transform: translateY(-2px);
+      box-shadow: 0 0 36px var(--accent-glow);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      color: var(--text);
+      border-color: #444;
+      background: rgba(255,255,255,0.03);
+    }
+  </style>
 </head>
 <body>
+  <div class="wrapper">
+    <a href="/" class="back-link">← Back to users</a>
 
-<h2>Edit User</h2>
+    <div class="card">
+      <div class="card-icon">✏️</div>
+      <h2>Edit <span>User</span> <span class="user-id">#{{ user.id }}</span></h2>
+      <p class="subtitle">Update the details for this user below.</p>
 
-<form method="POST">
-    Name:<br>
-    <input type="text" name="name" value="{{ user.name }}" required><br><br>
+      <form method="POST" action="/edit/{{ user.id }}">
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" name="name" value="{{ user.name }}" required />
+        </div>
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" value="{{ user.email }}" required />
+        </div>
 
-    Email:<br>
-    <input type="email" name="email" value="{{ user.email }}" required><br><br>
+        <div class="divider"></div>
 
-    <button type="submit">Update</button>
-</form>
-
-<a href="/">Back</a>
-
+        <div class="actions">
+          <a href="/" class="btn btn-ghost">Cancel</a>
+          <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </body>
 </html>

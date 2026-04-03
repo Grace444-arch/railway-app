@@ -1,35 +1,266 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>User List</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0f14;
+      --surface: #161920;
+      --border: #252830;
+      --accent: #7c5cfc;
+      --accent-glow: rgba(124, 92, 252, 0.25);
+      --danger: #fc5c5c;
+      --text: #e8eaf0;
+      --muted: #6b7280;
+      --success: #5cfca0;
+    }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 48px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    header h1 span { color: var(--accent); }
+
+    .badge {
+      display: inline-block;
+      background: rgba(92, 252, 160, 0.1);
+      color: var(--success);
+      font-size: 0.72rem;
+      font-family: 'DM Mono', monospace;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-left: 10px;
+      vertical-align: middle;
+      border: 1px solid rgba(92, 252, 160, 0.2);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 24px;
+      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      transition: all 0.2s ease;
+      letter-spacing: 0.01em;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 24px var(--accent-glow);
+    }
+
+    .btn-primary:hover {
+      background: #9070ff;
+      box-shadow: 0 0 36px var(--accent-glow);
+      transform: translateY(-2px);
+    }
+
+    .btn-edit {
+      background: rgba(124, 92, 252, 0.1);
+      color: var(--accent);
+      border: 1px solid rgba(124, 92, 252, 0.3);
+      padding: 7px 16px;
+      font-size: 0.82rem;
+      border-radius: 6px;
+    }
+
+    .btn-edit:hover {
+      background: rgba(124, 92, 252, 0.2);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .btn-danger {
+      background: rgba(252, 92, 92, 0.1);
+      color: var(--danger);
+      border: 1px solid rgba(252, 92, 92, 0.3);
+      padding: 7px 16px;
+      font-size: 0.82rem;
+      border-radius: 6px;
+    }
+
+    .btn-danger:hover {
+      background: rgba(252, 92, 92, 0.2);
+      border-color: var(--danger);
+      transform: translateY(-1px);
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-header span {
+      font-size: 0.8rem;
+      font-family: 'DM Mono', monospace;
+      color: var(--muted);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 14px 24px;
+      font-size: 0.72rem;
+      font-family: 'DM Mono', monospace;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 500;
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    tbody td {
+      padding: 16px 24px;
+      font-size: 0.95rem;
+    }
+
+    td.id-col {
+      font-family: 'DM Mono', monospace;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .actions { display: flex; gap: 8px; }
+
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--muted);
+    }
+
+    .empty-icon {
+      font-size: 3.5rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .empty-state p {
+      font-size: 1.1rem;
+      margin-bottom: 24px;
+    }
+
+    .empty-state a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.5rem; }
+      tbody td, thead th { padding: 12px 16px; }
+    }
+  </style>
 </head>
 <body>
+  <div class="container">
+    <header>
+      <h1>User <span>Manager</span>
+        {% if users %}
+          <span class="badge">{{ users|length }} users</span>
+        {% endif %}
+      </h1>
+      <a href="/register" class="btn btn-primary">+ Add User</a>
+    </header>
 
-<h2>Registered Users</h2>
-
-<a href="/register">➕ Register New User</a>
-
-<table border="1">
-    <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Actions</th>
-    </tr>
-
-    {% for user in users %}
-    <tr>
-        <td>{{ user.id }}</td>
-        <td>{{ user.name }}</td>
-        <td>{{ user.email }}</td>
-        <td>
-            <a href="/edit/{{ user.id }}">Edit</a>
-            <a href="/delete/{{ user.id }}">Delete</a>
-        </td>
-    </tr>
-    {% endfor %}
-
-</table>
-
+    <div class="card">
+      {% if users %}
+      <div class="card-header">
+        <span>All registered users</span>
+        <span>{{ users|length }} total</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+          <tr>
+            <td class="id-col">#{{ user.id }}</td>
+            <td>{{ user.name }}</td>
+            <td>{{ user.email }}</td>
+            <td>
+              <div class="actions">
+                <a href="/edit/{{ user.id }}" class="btn btn-edit">✏️ Edit</a>
+                <a href="/delete/{{ user.id }}" class="btn btn-danger"
+                   onclick="return confirm('Delete {{ user.name }}? This cannot be undone.')">🗑️ Delete</a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">
+        <span class="empty-icon">👤</span>
+        <p>No users registered yet.</p>
+        <a href="/register" class="btn btn-primary">+ Add First User</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
 </body>
 </html>
