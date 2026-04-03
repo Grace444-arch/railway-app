@@ -6,10 +6,9 @@ import os
 app = Flask(__name__)
 
 # 🔹 DATABASE CONNECTION (RAILWAY or LOCAL fallback)
-# Set DATABASE_URL in Railway's Variables tab, or in a .env file locally
 DATABASE_URL = os.environ.get(
     "DATABASE_URL",
-    "postgresql://postgres:yourpassword@localhost:5432/railway_app"  # ← replace for local dev
+    "postgresql://postgres:ssekiziyivu@localhost:5432/railway_app"  # ← local dev fallback
 )
 
 def get_db():
@@ -99,6 +98,9 @@ def edit(id):
     conn.close()
     return render_template("edit.html", user=user)
 
+
+# 🔹 RUN INIT (works for both local and Railway/gunicorn)
+init_db()
+
 if __name__ == "__main__":
-    init_db()
     app.run(debug=True)
