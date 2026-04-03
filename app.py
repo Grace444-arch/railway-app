@@ -1,87 +1,104 @@
-from flask import Flask, request, jsonify
-import os
+from flask import Flask, render_template, request, redirect, url_for
 import psycopg2
 from psycopg2.extras import RealDictCursor
+import os
 
 app = Flask(__name__)
 
-def get_db():
-    return psycopg2.connect(os.environ.get("DATABASE_URL"), sslmode="require")
+# 🔹 DATABASE CONNECTION (RAILWAY or LOCAL fallback)
+# Set DATABASE_URL in Railway's Variables tab, or in a .env file locally
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL",
+    "postgresql://postgres:yourpassword@localhost:5432/railway_app"  # ← replace for local dev
+)
 
+def get_db():
+    return psycopg2.connect(DATABASE_URL)
+
+# 🔹 CREATE TABLE IF NOT EXISTS
 def init_db():
     conn = get_db()
     cur = conn.cursor()
     cur.execute("""
-        CREATE TABLE IF NOT EXISTS items (
+        CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             name TEXT NOT NULL,
-            description TEXT
+            email TEXT NOT NULL
         )
     """)
     conn.commit()
     cur.close()
     conn.close()
+    print("✅ Database initialized successfully.")
 
+# 🔹 HOME PAGE (VIEW ALL USERS)
 @app.route("/")
-def home():
-    return "Railway App is Running!"
-
-@app.route("/items", methods=["POST"])
-def create_item():
-    data = request.get_json()
+def index():
     conn = get_db()
     cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute("INSERT INTO items (name, description) VALUES (%s, %s) RETURNING *",
-                (data["name"], data.get("description", "")))
-    item = cur.fetchone()
-    conn.commit()
+    cur.execute("SELECT * FROM users ORDER BY id DESC")
+    users = cur.fetchall()
     cur.close()
     conn.close()
-    return jsonify(dict(item)), 201
+    return render_template("index.html", users=users)
 
-@app.route("/items", methods=["GET"])
-def get_items():
-    conn = get_db()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute("SELECT * FROM items")
-    items = [dict(row) for row in cur.fetchall()]
-    cur.close()
-    conn.close()
-    return jsonify(items)
+# 🔹 REGISTER FORM PAGE
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        name = request.form["name"]
+        email = request.form["email"]
 
-@app.route("/items/<int:id>", methods=["GET"])
-def get_item(id):
-    conn = get_db()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute("SELECT * FROM items WHERE id = %s", (id,))
-    item = cur.fetchone()
-    cur.close()
-    conn.close()
-    return jsonify(dict(item)) if item else (jsonify({"error": "Not found"}), 404)
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute(
+            "INSERT INTO users (name, email) VALUES (%s, %s)",
+            (name, email)
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
 
-@app.route("/items/<int:id>", methods=["PUT"])
-def update_item(id):
-    data = request.get_json()
-    conn = get_db()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute("UPDATE items SET name=%s, description=%s WHERE id=%s RETURNING *",
-                (data["name"], data.get("description", ""), id))
-    item = cur.fetchone()
-    conn.commit()
-    cur.close()
-    conn.close()
-    return jsonify(dict(item)) if item else (jsonify({"error": "Not found"}), 404)
+        return redirect(url_for("index"))
 
-@app.route("/items/<int:id>", methods=["DELETE"])
-def delete_item(id):
+    return render_template("register.html")
+
+# 🔹 DELETE USER
+@app.route("/delete/<int:id>")
+def delete(id):
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("DELETE FROM items WHERE id=%s", (id,))
+    cur.execute("DELETE FROM users WHERE id=%s", (id,))
     conn.commit()
     cur.close()
     conn.close()
-    return jsonify({"message": "Deleted successfully"})
+    return redirect(url_for("index"))
+
+# 🔹 EDIT USER
+@app.route("/edit/<int:id>", methods=["GET", "POST"])
+def edit(id):
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    if request.method == "POST":
+        name = request.form["name"]
+        email = request.form["email"]
+
+        cur.execute(
+            "UPDATE users SET name=%s, email=%s WHERE id=%s",
+            (name, email, id)
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        return redirect(url_for("index"))
+
+    cur.execute("SELECT * FROM users WHERE id=%s", (id,))
+    user = cur.fetchone()
+    cur.close()
+    conn.close()
+    return render_template("edit.html", user=user)
 
 if __name__ == "__main__":
     init_db()
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run(debug=True)
